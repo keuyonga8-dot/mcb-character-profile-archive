@@ -1,0 +1,1942 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Character Profile Archive</title>
+<script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.13/dist/html-to-image.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dom-to-image-more@3.5.0/dist/dom-to-image-more.min.js"></script>
+<style>
+:root {
+    --bg: #f8f3ec;
+    --paper: #fffefa;
+    --paper2: #fdf8f1;
+    --ink: #3c372f;
+    --sub: #8a7d6d;
+    --line: #eadfce;
+    --line2: #d8c8b5;
+    --accent: #86b8a4;
+    --accent2: #e05f86;
+
+    --water: #6da9c9;
+    --fire: #cf8275;
+    --wind: #83b98f;
+    --ice: #8ec6d0;
+    --lightning: #d1aa48;
+    --grass: #8cb878;
+    --neutral: #aaa0c9;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: Pretendard, "Noto Sans KR", system-ui, sans-serif;
+}
+
+.page {
+    width: 1080px;
+    max-width: calc(100% - 24px);
+    margin: 0 auto;
+    padding: 18px 0 28px;
+}
+
+#capture-area {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 16px;
+    box-shadow: 0 14px 35px rgba(85, 64, 42, .10);
+}
+
+.header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 16px;
+    align-items: center;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 12px;
+}
+
+h1 {
+    margin: 0;
+    font-size: 25px;
+    letter-spacing: -.05em;
+    line-height: 1;
+}
+
+.desc {
+    margin: 7px 0 0;
+    font-size: 11px;
+    color: var(--sub);
+    font-weight: 700;
+}
+
+.counts {
+    display: flex;
+    gap: 7px;
+}
+
+.count {
+    width: 78px;
+    padding: 7px 8px;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    background: var(--paper2);
+    text-align: center;
+}
+
+.count span {
+    display: block;
+    font-size: 9px;
+    color: var(--sub);
+    font-weight: 900;
+}
+
+.count b {
+    display: block;
+    font-size: 18px;
+    margin-top: 1px;
+}
+
+.toolbar {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.tabs, .actions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+button {
+    font-family: inherit;
+    border: 1px solid var(--line);
+    background: var(--paper2);
+    color: var(--sub);
+    border-radius: 999px;
+    padding: 7px 11px;
+    font-size: 11px;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+button.active {
+    background: var(--ink);
+    color: #fffdf8;
+    border-color: var(--ink);
+}
+
+button.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+}
+
+#editModeBtn.active {
+    background: var(--accent2);
+    border-color: var(--accent2);
+    color: #fff;
+}
+
+#orderToggleBtn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+}
+
+#attrModeBtn.active {
+    background: var(--water);
+    border-color: var(--water);
+    color: #fff;
+}
+
+.section {
+    margin-top: 10px;
+    border: 1px solid var(--line);
+    border-radius: 15px;
+    overflow: hidden;
+    background: #fffaf3;
+}
+
+.section-head {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    align-items: center;
+    padding: 8px 10px;
+    background: var(--paper2);
+    border-bottom: 1px solid var(--line);
+}
+
+.section-title {
+    font-size: 13px;
+    font-weight: 950;
+    letter-spacing: -.03em;
+}
+
+.section-count {
+    font-size: 9px;
+    color: var(--sub);
+    font-weight: 900;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 12px;
+    padding: 12px;
+}
+
+.card {
+    position: relative;
+    aspect-ratio: 3 / 4;
+    border-radius: 8px;
+    border: 1px solid var(--line2);
+    background: #efe4d6;
+    overflow: hidden;
+    cursor: pointer;
+    box-shadow: 0 6px 14px rgba(85, 64, 42, .10);
+    transition: transform .15s ease, filter .15s ease, border-color .15s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    border-color: #bca993;
+    filter: brightness(1.015);
+}
+
+/* 드래그 정렬 시각 피드백 */
+.card[draggable="true"] {
+    cursor: grab;
+}
+.card[draggable="true"]:active {
+    cursor: grabbing;
+}
+.card.dragging {
+    opacity: 0.4;
+}
+.card.drag-over {
+    box-shadow: 0 0 0 3px var(--accent2), 0 6px 14px rgba(85, 64, 42, .10);
+    transform: scale(1.02);
+}
+
+.card-cover {
+    position: absolute;
+    inset: 0;
+    background: #e8d9c7;
+}
+
+.card-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 16%;
+    display: block;
+    background: #e8d9c7;
+}
+
+.card-cover.empty {
+    display: grid;
+    place-items: center;
+    color: rgba(138,125,109,.38);
+    font-size: 11px;
+    font-weight: 950;
+    letter-spacing: .04em;
+    background: #efe4d6;
+}
+
+.card-cover.empty::before {
+    content: "IMAGE";
+}
+
+/* 빈 카드는 그라데이션을 끔 — 이미지 위에 깔릴 때만 의미가 있음 */
+.card.no-image .card-info {
+    background: transparent !important;
+    background-image: none !important;
+}
+.card.no-image .codename,
+.card.no-image .name {
+    color: var(--ink);
+    text-shadow: none;
+}
+
+.card-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 7px 6px 5px;
+    z-index: 2;
+    background: linear-gradient(to top,
+        rgba(52, 43, 35, .72) 0%,
+        rgba(52, 43, 35, .35) 60%,
+        rgba(52, 43, 35, .001) 100%);
+}
+
+.card-info.is-minimal {
+    padding-top: 5px;
+    background: linear-gradient(to top,
+        rgba(52, 43, 35, .55) 0%,
+        rgba(52, 43, 35, .001) 100%);
+}
+
+.attr-mode-color .card.has-attr .card-info {
+    background: linear-gradient(to top,
+        rgba(var(--attr-rgb, 52,43,35), .80) 0%,
+        rgba(var(--attr-rgb, 52,43,35), .42) 60%,
+        rgba(var(--attr-rgb, 52,43,35), .001) 100%);
+}
+.attr-mode-color .card.has-attr .card-info.is-minimal {
+    background: linear-gradient(to top,
+        rgba(var(--attr-rgb, 52,43,35), .60) 0%,
+        rgba(var(--attr-rgb, 52,43,35), .001) 100%);
+}
+
+.card-info.is-empty {
+    display: none;
+}
+
+.codename {
+    display: block;
+    font-size: 13px;
+    font-weight: 1000;
+    line-height: 1.05;
+    letter-spacing: -.04em;
+    color: #fffdf8;
+    text-shadow: 0 0 4px rgba(0,0,0,.6), 0 0 2px rgba(0,0,0,.5);
+    white-space: normal;
+    word-break: keep-all;
+}
+
+.name {
+    margin-top: 2px;
+    font-size: 8px;
+    font-weight: 850;
+    line-height: 1.1;
+    letter-spacing: -.03em;
+    color: rgba(255, 253, 248, .78);
+    text-shadow: 0 0 3px rgba(0,0,0,.55);
+    white-space: normal;
+    word-break: keep-all;
+}
+
+.meta {
+    margin-top: 4px;
+    display: flex;
+    flex-direction: row;
+    gap: 3px;
+    flex-wrap: wrap;
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 13px;
+    min-width: 28px;
+    padding: 0 5px;
+    border-radius: 999px;
+    font-size: 7px;
+    line-height: 1;
+    font-weight: 950;
+    color: #ffffff;
+    box-shadow: 0 1px 3px rgba(0,0,0,.18);
+    vertical-align: top;
+}
+
+.badge.attr-water { background: var(--water); }
+.badge.attr-fire { background: var(--fire); }
+.badge.attr-wind { background: var(--wind); }
+.badge.attr-ice { background: var(--ice); }
+.badge.attr-lightning { background: var(--lightning); }
+.badge.attr-grass { background: var(--grass); }
+.badge.attr-neutral { background: var(--neutral); }
+.badge.rank { background: #9f9384; }
+.badge.team { background: #8a7d6d; }
+.badge.partner { background: #c7869d; }
+
+/* 파트너 토큰 - 우상단 세로 스택, 개별 색상 지정 가능 */
+.partner-stack {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    z-index: 6;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    align-items: flex-end;
+    pointer-events: none;
+    max-width: 60%;
+}
+
+.partner-token {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 16px;
+    padding: 0 8px;
+    border-radius: 999px;
+    font-size: 8.5px;
+    line-height: 1;
+    font-weight: 950;
+    letter-spacing: -.02em;
+    color: #fff;
+    background: #c7869d;
+    box-shadow: 0 2px 6px rgba(0,0,0,.28);
+    white-space: nowrap;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: top;
+}
+
+.compact .partner-token {
+    height: 13px;
+    font-size: 7px;
+    padding: 0 6px;
+}
+
+.delete-btn {
+    display: none;
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #d6605c;
+    color: #fff;
+    border: none;
+    font-size: 12px;
+    line-height: 1;
+    font-weight: 900;
+    cursor: pointer;
+    padding: 0;
+    z-index: 5;
+    box-shadow: 0 2px 7px rgba(0,0,0,.28);
+}
+
+.add-card {
+    display: none;
+    aspect-ratio: 3 / 4;
+    border-radius: 8px;
+    border: 1px dashed var(--line2);
+    background: #efe4d6;
+    color: var(--sub);
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 950;
+    cursor: pointer;
+}
+
+.add-card:hover {
+    border-color: var(--accent2);
+    color: var(--accent2);
+    background: #fff7f9;
+}
+
+.add-team-btn {
+    display: none;
+    width: 100%;
+    margin-top: 10px;
+    padding: 12px;
+    border: 2px dashed var(--line);
+    border-radius: 15px;
+    background: #fffaf3;
+    color: var(--sub);
+    font-size: 12px;
+    font-weight: 900;
+}
+
+.edit-mode .delete-btn,
+.edit-mode .add-card,
+.edit-mode .add-team-btn {
+    display: flex;
+}
+
+.capturing .delete-btn,
+.capturing .add-card,
+.capturing .add-team-btn,
+.capturing .toolbar {
+    display: none !important;
+}
+
+.compact .grid {
+    grid-template-columns: repeat(8, 1fr);
+    gap: 9px;
+    padding: 9px;
+}
+
+.compact .card {
+    border-radius: 6px;
+}
+
+.compact .card-info {
+    padding: 7px 5px 4px;
+}
+
+.compact .codename { font-size: 10px; }
+.compact .name { font-size: 7px; }
+.compact .badge { font-size: 6px; height: 11px; min-width: 24px; padding: 0 4px; }
+
+.empty-guide {
+    padding: 42px 20px;
+    text-align: center;
+    color: var(--sub);
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.empty-guide b { color: var(--ink); }
+
+.modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(60, 55, 47, .45);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal-overlay.show { display: flex; }
+
+.modal {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 22px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 20px 50px rgba(60, 55, 47, .22);
+}
+
+.modal h3 {
+    margin: 0 0 16px;
+    font-size: 16px;
+    letter-spacing: -.03em;
+}
+
+.modal label {
+    display: block;
+    font-size: 10px;
+    font-weight: 900;
+    color: var(--sub);
+    margin-bottom: 4px;
+    margin-top: 10px;
+    letter-spacing: .03em;
+}
+
+.modal label:first-of-type { margin-top: 0; }
+
+.modal input,
+.modal select {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--paper2);
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--ink);
+}
+
+.modal input:focus,
+.modal select:focus {
+    outline: none;
+    border-color: var(--accent2);
+}
+
+.image-preview {
+    margin-top: 8px;
+    width: 84px;
+    aspect-ratio: 3 / 4;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: var(--paper2);
+    overflow: hidden;
+    display: grid;
+    place-items: center;
+    color: var(--sub);
+    font-size: 9px;
+    font-weight: 900;
+}
+
+.image-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 18px;
+    justify-content: flex-end;
+}
+
+.modal-actions button {
+    padding: 8px 14px;
+    font-size: 12px;
+}
+
+.partner-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin-top: 6px;
+}
+.partner-row input[type="text"] {
+    flex: 1;
+    margin: 0;
+}
+.partner-row .swatch {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    cursor: pointer;
+    position: relative;
+    flex-shrink: 0;
+}
+.partner-row .swatch::after {
+    content: "▾";
+    position: absolute;
+    bottom: -2px;
+    right: 1px;
+    font-size: 9px;
+    color: rgba(255,255,255,.95);
+    text-shadow: 0 0 2px rgba(0,0,0,.4);
+}
+.partner-row .remove-row {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--paper2);
+    border: 1px solid var(--line);
+    color: var(--sub);
+    font-size: 14px;
+    line-height: 1;
+    padding: 0;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+.partner-row .remove-row:hover {
+    background: #fbe6e6;
+    color: #d6605c;
+    border-color: #e8b8b8;
+}
+
+.color-popover {
+    position: absolute;
+    z-index: 200;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 8px;
+    box-shadow: 0 12px 30px rgba(60,55,47,.22);
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 5px;
+    width: 192px;
+}
+.color-popover .swatch-pick {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    border: 1px solid rgba(0,0,0,.08);
+    cursor: pointer;
+    padding: 0;
+}
+.color-popover .swatch-pick:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 2px var(--ink);
+}
+
+@media (max-width: 900px) {
+    .page { padding: 12px 0 20px; }
+    .header, .toolbar {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .counts { width: 100%; flex-wrap: wrap; }
+    .count { flex: 1; min-width: calc(50% - 4px); }
+    .grid, .compact .grid { grid-template-columns: repeat(3, 1fr); }
+    h1 { font-size: 22px; }
+}
+
+@media (max-width: 480px) {
+    .grid, .compact .grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+    <main id="capture-area">
+        <div class="header">
+            <div>
+                <h1>CHARACTER PROFILE ARCHIVE</h1>
+                <p class="desc">  </p>
+            </div>
+            <div class="counts">
+                <div class="count"><span>전체</span><b id="totalCount">0</b></div>
+                <div class="count"><span>팀</span><b id="teamCount">0</b></div>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <div class="tabs">
+                <button class="active" id="tab-group" onclick="setMode('group')">팀별</button>
+                <button id="tab-rank" onclick="setMode('rank')">등급순</button>
+                <button id="tab-attr" onclick="setMode('attr')">속성별</button>
+                <button id="tab-role" onclick="setMode('role')">Sentinel / Guide</button>
+                <button id="tab-all" onclick="setMode('all')">전체</button>
+            </div>
+            <div class="actions">
+                <button onclick="toggleCompact()">작게/보통</button>
+                <button id="attrModeBtn" onclick="toggleAttrMode()">속성색 OFF</button>
+                <button id="orderToggleBtn" class="active" onclick="toggleOrderMode()">기본순서 ON</button>
+                <button onclick="toggleEditMode()" id="editModeBtn">편집</button>
+                <button onclick="exportJSON()">백업</button>
+                <button onclick="document.getElementById('importJSONInput').click()">복원</button>
+                <input type="file" id="importJSONInput" accept="application/json,.json" style="display:none" onchange="importJSON(event)" />
+                <button onclick="resetArchive()">전체삭제</button>
+                <button class="primary" onclick="saveImage('png')">PNG</button>
+                <button class="primary" onclick="saveImage('jpeg')">JPG</button>
+            </div>
+        </div>
+
+        <div id="content"></div>
+    </main>
+</div>
+
+<div class="modal-overlay" id="charModal">
+    <div class="modal">
+        <h3 id="modalTitle">캐릭터 추가</h3>
+
+        <label>프로필 이미지</label>
+        <input type="file" id="charImage" accept="image/*" />
+        <div class="image-preview" id="imagePreview">NO IMAGE</div>
+
+        <label>코드네임</label>
+        <input type="text" id="charCode" placeholder="코드네임" />
+
+        <label>본명 / 이름</label>
+        <input type="text" id="charName" placeholder="캐릭터 이름" />
+
+        <label>팀</label>
+        <select id="charTeam"></select>
+
+        <label>속성</label>
+        <select id="charAttr">
+            <option>물</option>
+            <option>불</option>
+            <option>바람</option>
+            <option>얼음</option>
+            <option>번개</option>
+            <option>풀</option>
+            <option>무속성</option>
+        </select>
+
+        <label>등급</label>
+        <select id="charRank">
+            <option>SS</option>
+            <option>S</option>
+            <option>A</option>
+            <option>B</option>
+            <option>C</option>
+        </select>
+
+        <label>파트너 (여러 명 가능)</label>
+        <div id="partnerEditor"></div>
+        <button type="button" id="addPartnerBtn" onclick="addPartnerRow()" style="margin-top:6px;font-size:11px;">+ 파트너 추가</button>
+        <datalist id="partnerList"></datalist>
+
+        <div class="modal-actions">
+            <button onclick="closeModal()">취소</button>
+            <button class="primary" onclick="saveCharFromModal()">저장</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="teamModal">
+    <div class="modal">
+        <h3>새 팀 추가</h3>
+        <label>팀 이름</label>
+        <input type="text" id="newTeamName" placeholder="예: HARMONY CORE" />
+        <div class="modal-actions">
+            <button onclick="closeTeamModal()">취소</button>
+            <button class="primary" onclick="saveNewTeam()">추가</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let mode = "group";
+let editingChar = null;
+let selectedImageData = "";
+let useDefaultOrder = true;
+let attrColorMode = false; // 속성색 그라데이션 ON/OFF
+
+// 모달에서 편집 중인 파트너 목록 임시 보관
+let editingPartners = []; // [{name, color}]
+
+const rankOrder = { "SS": 0, "S": 1, "A": 2, "B": 3, "C": 4 };
+const attrOrder = { "물": 0, "불": 1, "바람": 2, "얼음": 3, "번개": 4, "풀": 5, "무속성": 6 };
+const UNCATEGORIZED = "미분류";
+
+// 속성색 RGB 값 (그라데이션용)
+const attrRGB = {
+    "물": "109,169,201",
+    "불": "207,130,117",
+    "바람": "131,185,143",
+    "얼음": "142,198,208",
+    "번개": "209,170,72",
+    "풀": "140,184,120",
+    "무속성": "170,160,201"
+};
+
+// 파트너 색상 팔레트 (12색)
+const partnerPalette = [
+    "#c7869d", "#d6918a", "#d4a574", "#c9b86a",
+    "#9fb87a", "#7fb89a", "#7fb1c4", "#8aa3d0",
+    "#a395d0", "#b88ac4", "#a89889", "#7d7066"
+];
+const DEFAULT_PARTNER_COLOR = "#c7869d";
+
+let teamOrder = [
+    { name: "ARCH-PRIMA" },
+    { name: "VANGUARD" },
+    { name: "AGENT" },
+    { name: "ACOLYTE" },
+    { name: "HARMONY SUPPORT" },
+    { name: "HARMONY R.S.T." },
+    { name: "HARMONY CORE" }
+];
+
+let chars = [];
+
+function normalizeTeam(name) {
+    if (!name) return UNCATEGORIZED;
+    const s = String(name).trim();
+    if (!s) return UNCATEGORIZED;
+    if (s.includes("VANGUARD")) return "VANGUARD";
+    // 기존 저장본 호환: "HARMONY R.S.T" → "HARMONY R.S.T."
+    if (s === "HARMONY R.S.T") return "HARMONY R.S.T.";
+    return s;
+}
+
+function getRoleByTeam(team) {
+    const t = normalizeTeam(team);
+    if (["ARCH-PRIMA", "VANGUARD", "AGENT", "ACOLYTE"].includes(t)) return "Sentinel";
+    if (["HARMONY SUPPORT", "HARMONY R.S.T.", "HARMONY CORE"].includes(t)) return "Guide";
+    return "기타";
+}
+
+function getAttrClass(attr) {
+    const map = {
+        "물": "attr-water", "불": "attr-fire", "바람": "attr-wind",
+        "얼음": "attr-ice", "번개": "attr-lightning",
+        "풀": "attr-grass", "무속성": "attr-neutral"
+    };
+    return map[attr] || "attr-neutral";
+}
+
+function normalizeData() {
+    chars = chars.map(c => ({ ...c, g: normalizeTeam(c.g) }));
+
+    const seen = new Set();
+    teamOrder = teamOrder
+        .map(t => ({ name: normalizeTeam(t.name) }))
+        .filter(t => {
+            if (!t.name || t.name === UNCATEGORIZED) return false;
+            if (seen.has(t.name)) return false;
+            seen.add(t.name);
+            return true;
+        });
+
+    if (!teamOrder.some(t => t.name === "VANGUARD")) {
+        teamOrder.splice(1, 0, { name: "VANGUARD" });
+    }
+
+    const teamNames = new Set(teamOrder.map(t => t.name));
+    let needUncategorized = false;
+    chars.forEach(c => {
+        if (!teamNames.has(c.g)) {
+            c.g = UNCATEGORIZED;
+            needUncategorized = true;
+        }
+    });
+
+    if (needUncategorized && !teamOrder.some(t => t.name === UNCATEGORIZED)) {
+        teamOrder.push({ name: UNCATEGORIZED });
+    }
+}
+
+/* ───────────────── 저장/로드 (IndexedDB + 이미지 자동 다이어트) ───────────────── */
+
+const DB_NAME = "profile-card-archive-db";
+const DB_STORE = "kv";
+const DB_KEY = "main";
+const LS_KEY = "profile-card-archive-data";
+
+let dbReady = null;
+
+function openDB() {
+    if (dbReady) return dbReady;
+    dbReady = new Promise((resolve, reject) => {
+        if (!("indexedDB" in window)) { reject(new Error("IndexedDB 미지원")); return; }
+        const req = indexedDB.open(DB_NAME, 1);
+        req.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains(DB_STORE)) {
+                db.createObjectStore(DB_STORE);
+            }
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+    });
+    return dbReady;
+}
+
+function idbGet(key) {
+    return openDB().then(db => new Promise((resolve, reject) => {
+        const tx = db.transaction(DB_STORE, "readonly");
+        const r = tx.objectStore(DB_STORE).get(key);
+        r.onsuccess = () => resolve(r.result);
+        r.onerror = () => reject(r.error);
+    }));
+}
+
+function idbSet(key, value) {
+    return openDB().then(db => new Promise((resolve, reject) => {
+        const tx = db.transaction(DB_STORE, "readwrite");
+        const r = tx.objectStore(DB_STORE).put(value, key);
+        r.onsuccess = () => resolve();
+        r.onerror = () => reject(r.error);
+    }));
+}
+
+// 페이지 로드 시 호출되는 비동기 로더
+async function load() {
+    let obj = null;
+
+    // 1) IndexedDB 우선
+    try {
+        const data = await idbGet(DB_KEY);
+        if (data) obj = data;
+    } catch (e) {
+        console.warn("IndexedDB 로드 실패:", e);
+    }
+
+    // 2) IndexedDB 비어있으면 localStorage에서 마이그레이션
+    if (!obj) {
+        const saved = localStorage.getItem(LS_KEY);
+        if (saved) {
+            try {
+                obj = JSON.parse(saved);
+                // 마이그레이션 후 IDB로 옮기고 LS 비움
+                try {
+                    await idbSet(DB_KEY, obj);
+                    localStorage.removeItem(LS_KEY);
+                    console.log("localStorage → IndexedDB 마이그레이션 완료");
+                } catch (e) {
+                    console.warn("마이그레이션 저장 실패:", e);
+                }
+            } catch(e) { console.error(e); }
+        }
+    }
+
+    if (!obj) return;
+
+    if (Array.isArray(obj.chars)) chars = obj.chars;
+    if (Array.isArray(obj.teamOrder)) teamOrder = obj.teamOrder;
+    if (typeof obj.useDefaultOrder === "boolean") useDefaultOrder = obj.useDefaultOrder;
+    if (typeof obj.attrColorMode === "boolean") attrColorMode = obj.attrColorMode;
+
+    // 기존 단일 partner → partners 마이그레이션
+    chars.forEach(c => {
+        if (!Array.isArray(c.partners)) {
+            if (c.partner && typeof c.partner === "string") {
+                c.partners = [{ name: c.partner, color: DEFAULT_PARTNER_COLOR }];
+            } else {
+                c.partners = [];
+            }
+        }
+        c.partners = c.partners.map(p => {
+            if (typeof p === "string") return { name: p, color: DEFAULT_PARTNER_COLOR };
+            return { name: p.name || "", color: p.color || DEFAULT_PARTNER_COLOR };
+        }).filter(p => p.name);
+    });
+
+    normalizeData();
+}
+
+// 동기 save 인터페이스 유지하되 내부적으로는 비동기 IDB 저장
+function save() {
+    normalizeData();
+    const payload = { chars, teamOrder, useDefaultOrder, attrColorMode };
+
+    idbSet(DB_KEY, payload).catch(err => {
+        console.error("IndexedDB 저장 실패:", err);
+        // IDB 실패 시 LS 폴백 시도
+        try {
+            localStorage.setItem(LS_KEY, JSON.stringify(payload));
+        } catch(e) {
+            alert("저장에 실패했습니다. [백업] 버튼으로 데이터를 JSON으로 내보내고 일부 이미지를 줄여주세요.");
+        }
+    });
+
+    return true; // 동기 호출 호환
+}
+
+function saveOrRollback(mutator) {
+    const backup = JSON.stringify({ chars, teamOrder, useDefaultOrder, attrColorMode });
+    try { mutator(); } catch (e) { console.error(e); }
+    save();
+    return true;
+}
+
+/* ───────────────── 이미지 자동 다이어트 ───────────────── */
+
+// dataURL의 대략 바이트 수
+function approxBytes(dataUrl) {
+    if (!dataUrl) return 0;
+    const i = dataUrl.indexOf(",");
+    return i < 0 ? dataUrl.length : Math.floor((dataUrl.length - i - 1) * 3 / 4);
+}
+
+// 단일 dataURL 재압축
+function recompressDataURL(dataUrl, maxSize, quality) {
+    return new Promise((resolve) => {
+        if (!dataUrl) { resolve(dataUrl); return; }
+        const img = new Image();
+        img.onload = () => {
+            const ratio = Math.min(maxSize / img.width, maxSize / img.height, 1);
+            const cv = document.createElement("canvas");
+            cv.width = Math.max(1, Math.round(img.width * ratio));
+            cv.height = Math.max(1, Math.round(img.height * ratio));
+            const ctx = cv.getContext("2d");
+            ctx.drawImage(img, 0, 0, cv.width, cv.height);
+            try {
+                resolve(cv.toDataURL("image/jpeg", quality));
+            } catch (e) { resolve(dataUrl); }
+        };
+        img.onerror = () => resolve(dataUrl);
+        img.src = dataUrl;
+    });
+}
+
+// 모든 캐릭터 이미지 다이어트 (단계적으로 더 작게)
+async function dietAllImages(level = 1) {
+    // level 1: 600px, q 0.75  / level 2: 480px, q 0.65  / level 3: 360px, q 0.55
+    const presets = [
+        { size: 600, q: 0.75 },
+        { size: 480, q: 0.65 },
+        { size: 360, q: 0.55 }
+    ];
+    const p = presets[Math.min(level, presets.length) - 1];
+    let changed = 0;
+    for (const c of chars) {
+        if (!c.img) continue;
+        const before = approxBytes(c.img);
+        const next = await recompressDataURL(c.img, p.size, p.q);
+        if (approxBytes(next) < before) {
+            c.img = next;
+            changed++;
+        }
+    }
+    return changed;
+}
+
+/* ───────────────── 백업 / 복원 ───────────────── */
+
+function exportJSON() {
+    normalizeData();
+    const payload = {
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        data: { chars, teamOrder, useDefaultOrder, attrColorMode }
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const ts = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+    a.href = url;
+    a.download = `character-profile-archive_${ts}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+}
+
+function importJSON(e) {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = ""; // 같은 파일 재선택 가능하도록
+    if (!file) return;
+    if (!confirm("백업 파일로 현재 데이터를 덮어쓸까요?\n현재 등록된 캐릭터/팀이 모두 교체됩니다.")) return;
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+        try {
+            const obj = JSON.parse(ev.target.result);
+            const data = obj && obj.data ? obj.data : obj;
+            if (!data || !Array.isArray(data.chars)) {
+                alert("올바른 백업 파일이 아닙니다.");
+                return;
+            }
+            chars = data.chars || [];
+            teamOrder = Array.isArray(data.teamOrder) ? data.teamOrder : teamOrder;
+            useDefaultOrder = data.useDefaultOrder !== false;
+            attrColorMode = !!data.attrColorMode;
+
+            // partner 호환 처리
+            chars.forEach(c => {
+                if (!Array.isArray(c.partners)) {
+                    if (c.partner) c.partners = [{ name: c.partner, color: DEFAULT_PARTNER_COLOR }];
+                    else c.partners = [];
+                }
+                c.partners = c.partners.map(p => typeof p === "string"
+                    ? { name: p, color: DEFAULT_PARTNER_COLOR }
+                    : { name: p.name || "", color: p.color || DEFAULT_PARTNER_COLOR }
+                ).filter(p => p.name);
+            });
+
+            normalizeData();
+            save();
+
+            // 토글 버튼 상태 동기화
+            const orderBtn = document.getElementById("orderToggleBtn");
+            orderBtn.classList.toggle("active", useDefaultOrder);
+            orderBtn.textContent = useDefaultOrder ? "기본순서 ON" : "기본순서 OFF";
+            const attrBtn = document.getElementById("attrModeBtn");
+            attrBtn.classList.toggle("active", attrColorMode);
+            attrBtn.textContent = attrColorMode ? "속성색 ON" : "속성색 OFF";
+            document.getElementById("capture-area").classList.toggle("attr-mode-color", attrColorMode);
+
+            render();
+            alert(`복원 완료! (캐릭터 ${chars.length}명)`);
+        } catch (err) {
+            console.error(err);
+            alert("백업 파일을 읽지 못했습니다.");
+        }
+    };
+    reader.readAsText(file);
+}
+
+function updateCounts() {
+    document.getElementById("totalCount").textContent = chars.length;
+    document.getElementById("teamCount").textContent = teamOrder.length;
+}
+
+function setMode(next) {
+    mode = next;
+    document.querySelectorAll(".tabs button").forEach(b => b.classList.remove("active"));
+    const btn = document.getElementById("tab-" + next);
+    if (btn) btn.classList.add("active");
+    render();
+}
+
+function toggleCompact() {
+    document.getElementById("capture-area").classList.toggle("compact");
+}
+
+function toggleEditMode() {
+    const area = document.getElementById("capture-area");
+    area.classList.toggle("edit-mode");
+    document.getElementById("editModeBtn").classList.toggle("active");
+    if (mode === "group") render();
+}
+
+function toggleOrderMode() {
+    useDefaultOrder = !useDefaultOrder;
+    const btn = document.getElementById("orderToggleBtn");
+    btn.classList.toggle("active", useDefaultOrder);
+    btn.textContent = useDefaultOrder ? "기본순서 ON" : "기본순서 OFF";
+    save();
+    render();
+}
+
+function toggleAttrMode() {
+    attrColorMode = !attrColorMode;
+    const btn = document.getElementById("attrModeBtn");
+    btn.classList.toggle("active", attrColorMode);
+    btn.textContent = attrColorMode ? "속성색 ON" : "속성색 OFF";
+    document.getElementById("capture-area").classList.toggle("attr-mode-color", attrColorMode);
+    save();
+}
+
+function sortByRank(list) {
+    return [...list].sort((a, b) => {
+        const r = (rankOrder[a.rank] ?? 99) - (rankOrder[b.rank] ?? 99);
+        if (r !== 0) return r;
+        const team = normalizeTeam(a.g).localeCompare(normalizeTeam(b.g));
+        if (team !== 0) return team;
+        const attr = (attrOrder[a.a] ?? 99) - (attrOrder[b.a] ?? 99);
+        if (attr !== 0) return attr;
+        return (a.code || a.n || "").localeCompare(b.code || b.n || "");
+    });
+}
+
+function sortByTeam(list) {
+    const teamOrderMap = Object.fromEntries(teamOrder.map((t, i) => [t.name, i]));
+    return [...list].sort((a,b) => {
+        const tg = (teamOrderMap[normalizeTeam(a.g)] ?? 99) - (teamOrderMap[normalizeTeam(b.g)] ?? 99);
+        if (tg !== 0) return tg;
+        // 같은 팀 안에서는 사용자 지정 order(있으면) 우선
+        const oa = (typeof a.order === "number") ? a.order : Infinity;
+        const ob = (typeof b.order === "number") ? b.order : Infinity;
+        if (oa !== ob) return oa - ob;
+        const rg = (rankOrder[a.rank] ?? 99) - (rankOrder[b.rank] ?? 99);
+        if (rg !== 0) return rg;
+        const ag = (attrOrder[a.a] ?? 99) - (attrOrder[b.a] ?? 99);
+        if (ag !== 0) return ag;
+        return (a.code || a.n || "").localeCompare(b.code || b.n || "");
+    });
+}
+
+function makeCard(c) {
+    const card = document.createElement("div");
+    card.className = "card";
+    if (!c.img) card.classList.add("no-image");
+
+    if (c.a && attrRGB[c.a]) {
+        card.style.setProperty("--attr-rgb", attrRGB[c.a]);
+        card.classList.add("has-attr");
+    }
+
+    // 편집모드에서만 드래그 가능 (팀별 탭일 때만 의미가 있음)
+    const inEdit = document.getElementById("capture-area").classList.contains("edit-mode");
+    if (inEdit && mode === "group") {
+        card.setAttribute("draggable", "true");
+        card.addEventListener("dragstart", (e) => onCardDragStart(e, c));
+        card.addEventListener("dragover", (e) => onCardDragOver(e, c));
+        card.addEventListener("drop", (e) => onCardDrop(e, c));
+        card.addEventListener("dragend", onCardDragEnd);
+        card.addEventListener("dragleave", onCardDragLeave);
+    }
+
+    const imgHTML = c.img
+        ? `<div class="card-cover has-image" data-bg="${escapeAttr(c.img)}"><img src="${c.img}" alt="${escapeHTML(c.code || c.n)}" /></div>`
+        : `<div class="card-cover empty"></div>`;
+
+    const attrClass = getAttrClass(c.a);
+    const mainCode = c.code || c.n || "";
+    const subName = c.code ? (c.n || "") : "";
+
+    // 파트너 스택 (우상단)
+    const partners = Array.isArray(c.partners) ? c.partners.filter(p => p && p.name) : [];
+    let partnerStackHTML = "";
+    if (partners.length) {
+        const tokens = partners.map(p => {
+            const color = p.color || DEFAULT_PARTNER_COLOR;
+            return `<span class="partner-token" style="background:${color}">${escapeHTML(p.name)}</span>`;
+        }).join("");
+        partnerStackHTML = `<div class="partner-stack">${tokens}</div>`;
+    }
+
+    const hasMeta = Boolean(c.g || c.a || c.rank || partners.length);
+    const teamHTML = c.g ? `<span class="badge team">${escapeHTML(normalizeTeam(c.g))}</span>` : "";
+    const attrHTML = c.a ? `<span class="badge ${attrClass}">${escapeHTML(c.a)}</span>` : "";
+    const rankHTML = c.rank ? `<span class="badge rank">${escapeHTML(c.rank)}</span>` : "";
+    const infoClass = !mainCode && !subName && !hasMeta ? "is-empty" : (!subName && !hasMeta ? "is-minimal" : "");
+
+    card.innerHTML = `
+        <button type="button" class="delete-btn">×</button>
+        ${imgHTML}
+        ${partnerStackHTML}
+        <div class="card-info ${infoClass}">
+            ${mainCode ? `<div class="codename">${escapeHTML(mainCode)}</div>` : ""}
+            ${subName ? `<div class="name">${escapeHTML(subName)}</div>` : ""}
+            ${hasMeta ? `<div class="meta">${teamHTML}${attrHTML}${rankHTML}</div>` : ""}
+        </div>
+    `;
+
+    card.onclick = () => {
+        if (document.getElementById("capture-area").classList.contains("edit-mode")) openEditModal(c);
+    };
+
+    card.querySelector(".delete-btn").onclick = (e) => {
+        e.stopPropagation();
+        if (!confirm(`"${c.code || c.n || "이 카드"}" 캐릭터를 삭제할까요?`)) return;
+        saveOrRollback(() => {
+            const idx = chars.indexOf(c);
+            if (idx > -1) chars.splice(idx, 1);
+        });
+        render();
+    };
+
+    return card;
+}
+
+/* ───────────── 드래그 정렬 ───────────── */
+
+let draggedChar = null;
+
+function ensureOrders(teamName) {
+    // 해당 팀 캐릭터들에 order가 없으면 현재 정렬 순서로 0,1,2... 부여
+    const list = sortByTeam(chars.filter(c => normalizeTeam(c.g) === teamName));
+    list.forEach((c, i) => {
+        if (typeof c.order !== "number") c.order = i;
+    });
+}
+
+function onCardDragStart(e, c) {
+    draggedChar = c;
+    ensureOrders(normalizeTeam(c.g));
+    try { e.dataTransfer.effectAllowed = "move"; } catch (err) {}
+    try { e.dataTransfer.setData("text/plain", "card"); } catch (err) {}
+    e.currentTarget.classList.add("dragging");
+}
+
+function onCardDragOver(e, c) {
+    if (!draggedChar) return;
+    if (normalizeTeam(c.g) !== normalizeTeam(draggedChar.g)) return; // 다른 팀은 무시
+    e.preventDefault();
+    try { e.dataTransfer.dropEffect = "move"; } catch (err) {}
+    e.currentTarget.classList.add("drag-over");
+}
+
+function onCardDragLeave(e) {
+    e.currentTarget.classList.remove("drag-over");
+}
+
+function onCardDrop(e, target) {
+    e.preventDefault();
+    e.currentTarget.classList.remove("drag-over");
+    if (!draggedChar || draggedChar === target) return;
+    if (normalizeTeam(draggedChar.g) !== normalizeTeam(target.g)) return;
+
+    const teamName = normalizeTeam(target.g);
+    ensureOrders(teamName);
+
+    // 같은 팀 내에서 order로 정렬한 배열을 가져와서 draggedChar를 target 위치로 이동
+    const teammates = chars
+        .filter(c => normalizeTeam(c.g) === teamName)
+        .sort((a, b) => a.order - b.order);
+
+    const fromIdx = teammates.indexOf(draggedChar);
+    const toIdx = teammates.indexOf(target);
+    if (fromIdx < 0 || toIdx < 0) return;
+
+    teammates.splice(fromIdx, 1);
+    teammates.splice(toIdx, 0, draggedChar);
+
+    // 새 order 부여
+    teammates.forEach((c, i) => { c.order = i; });
+
+    save();
+    render();
+}
+
+function onCardDragEnd(e) {
+    e.currentTarget.classList.remove("dragging");
+    document.querySelectorAll(".card.drag-over").forEach(el => el.classList.remove("drag-over"));
+    draggedChar = null;
+}
+
+function makeAddCard(teamName) {
+    const add = document.createElement("div");
+    add.className = "add-card";
+    add.innerHTML = "+ 캐릭터 추가";
+    add.onclick = () => openAddModal(teamName);
+    return add;
+}
+
+function section(title, list, teamName) {
+    const wrap = document.createElement("section");
+    wrap.className = "section";
+    wrap.innerHTML = `
+        <div class="section-head">
+            <div class="section-title">${escapeHTML(title)}</div>
+            <div class="section-count">${list.length}명</div>
+        </div>
+        <div class="grid"></div>
+    `;
+
+    const grid = wrap.querySelector(".grid");
+    list.forEach(c => grid.appendChild(makeCard(c)));
+    if (teamName) grid.appendChild(makeAddCard(teamName));
+    return wrap;
+}
+
+function render() {
+    normalizeData();
+    updateCounts();
+
+    const root = document.getElementById("content");
+    root.innerHTML = "";
+    const isEdit = document.getElementById("capture-area").classList.contains("edit-mode");
+
+    if (mode === "group") {
+        let teamsToShow;
+        if (useDefaultOrder) {
+            // 기본 순서 ON: 정의된 순서대로, 단 캐릭터 있는 팀만
+            teamsToShow = teamOrder
+                .map(t => t.name)
+                .filter(name => chars.some(c => normalizeTeam(c.g) === name));
+        } else {
+            // 기본 순서 OFF: 캐릭터가 처음 추가된 순서대로
+            const seen = new Set();
+            teamsToShow = [];
+            chars.forEach(c => {
+                const g = normalizeTeam(c.g);
+                if (!seen.has(g)) { seen.add(g); teamsToShow.push(g); }
+            });
+        }
+
+        if (teamsToShow.length === 0 && !isEdit) {
+            root.appendChild(emptyGuide());
+        } else if (teamsToShow.length === 0 && isEdit) {
+            root.appendChild(emptyGroupGuideEdit());
+        } else {
+            teamsToShow.forEach(teamName => {
+                const list = sortByTeam(chars.filter(c => normalizeTeam(c.g) === teamName));
+                root.appendChild(section(teamName, list, teamName));
+            });
+        }
+
+        // 편집모드: 비어있는 기본 팀 빠른 추가 (캐릭터 0이 아닐 때만)
+        if (isEdit && teamsToShow.length > 0) {
+            const shown = new Set(teamsToShow);
+            const hiddenTeams = teamOrder.map(t => t.name).filter(n => !shown.has(n) && n !== UNCATEGORIZED);
+            if (hiddenTeams.length) {
+                const hint = document.createElement("div");
+                hint.style.cssText = "margin-top:10px;padding:10px 12px;border:1px dashed var(--line);border-radius:12px;background:#fffaf3;font-size:11px;color:var(--sub);font-weight:900;display:flex;flex-wrap:wrap;gap:6px;align-items:center;";
+                hint.innerHTML = `<span>비어있는 팀:</span>`;
+                hiddenTeams.forEach(name => {
+                    const b = document.createElement("button");
+                    b.type = "button";
+                    b.textContent = "+ " + name;
+                    b.onclick = () => openAddModal(name);
+                    hint.appendChild(b);
+                });
+                root.appendChild(hint);
+            }
+        }
+
+        const addTeamBtn = document.createElement("button");
+        addTeamBtn.type = "button";
+        addTeamBtn.className = "add-team-btn";
+        addTeamBtn.innerHTML = "+ 새 팀 추가";
+        addTeamBtn.onclick = openTeamModal;
+        root.appendChild(addTeamBtn);
+    }
+
+    if (mode === "rank") {
+        if (chars.length) {
+            ["SS", "S", "A", "B", "C"].forEach(rank => {
+                const list = sortByTeam(chars.filter(c => c.rank === rank));
+                if (list.length) root.appendChild(section(rank + " 등급", list));
+            });
+        } else {
+            root.appendChild(emptyGuide());
+        }
+    }
+
+    if (mode === "attr") {
+        let hasAny = false;
+        Object.keys(attrOrder).forEach(a => {
+            const list = sortByRank(chars.filter(c => c.a === a));
+            if (list.length) {
+                hasAny = true;
+                root.appendChild(section(a + " 속성", list));
+            }
+        });
+        if (!hasAny) root.appendChild(emptyGuide());
+    }
+
+    if (mode === "role") {
+        const sentinel = sortByRank(chars.filter(c => getRoleByTeam(c.g) === "Sentinel"));
+        const guide = sortByRank(chars.filter(c => getRoleByTeam(c.g) === "Guide"));
+        const other = sortByRank(chars.filter(c => getRoleByTeam(c.g) === "기타"));
+
+        if (sentinel.length) root.appendChild(section("Sentinel", sentinel));
+        if (guide.length) root.appendChild(section("Guide", guide));
+        if (other.length) root.appendChild(section("기타", other));
+        if (!sentinel.length && !guide.length && !other.length) root.appendChild(emptyGuide());
+    }
+
+    if (mode === "all") {
+        if (chars.length) root.appendChild(section("전체 캐릭터", sortByRank(chars)));
+        else root.appendChild(emptyGuide());
+    }
+}
+
+function emptyGuide() {
+    const div = document.createElement("div");
+    div.className = "empty-guide";
+    div.innerHTML = `아직 등록된 캐릭터가 없습니다.<br><b>편집</b> 버튼을 누른 뒤, 팀별 칸의 <b>+ 캐릭터 추가</b>를 눌러주세요.`;
+    return div;
+}
+
+function emptyGroupGuideEdit() {
+    const div = document.createElement("div");
+    div.className = "empty-guide";
+    div.innerHTML = `아직 등록된 캐릭터가 없습니다.<br>아래 기본 팀에서 바로 추가하거나, <b>+ 새 팀 추가</b>로 팀을 만들어주세요.`;
+    const wrap = document.createElement("div");
+    wrap.style.cssText = "margin-top:14px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;";
+    teamOrder.forEach(t => {
+        if (t.name === UNCATEGORIZED) return;
+        const b = document.createElement("button");
+        b.type = "button";
+        b.textContent = "+ " + t.name;
+        b.onclick = () => openAddModal(t.name);
+        wrap.appendChild(b);
+    });
+    div.appendChild(wrap);
+    return div;
+}
+
+function fillTeamSelect() {
+    const sel = document.getElementById("charTeam");
+    sel.innerHTML = "";
+    teamOrder.forEach(t => {
+        const opt = document.createElement("option");
+        opt.value = t.name;
+        opt.textContent = t.name;
+        sel.appendChild(opt);
+    });
+
+    const partnerList = document.getElementById("partnerList");
+    partnerList.innerHTML = "";
+    chars.forEach(c => {
+        const label = [c.code, c.n].filter(Boolean).join(" / ");
+        if (!label) return;
+        const opt = document.createElement("option");
+        opt.value = label;
+        partnerList.appendChild(opt);
+    });
+}
+
+/* ───────────── 파트너 멀티 에디터 ───────────── */
+
+function renderPartnerEditor() {
+    const wrap = document.getElementById("partnerEditor");
+    wrap.innerHTML = "";
+    editingPartners.forEach((p, idx) => {
+        const row = document.createElement("div");
+        row.className = "partner-row";
+
+        const swatch = document.createElement("button");
+        swatch.type = "button";
+        swatch.className = "swatch";
+        swatch.style.background = p.color || DEFAULT_PARTNER_COLOR;
+        swatch.title = "색상 선택";
+        swatch.onclick = (e) => {
+            e.stopPropagation();
+            openColorPopover(swatch, idx);
+        };
+
+        const input = document.createElement("input");
+        input.type = "text";
+        input.setAttribute("list", "partnerList");
+        input.placeholder = "파트너 이름 / 코드네임";
+        input.value = p.name || "";
+        input.oninput = () => { editingPartners[idx].name = input.value; };
+
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "remove-row";
+        remove.textContent = "×";
+        remove.title = "삭제";
+        remove.onclick = () => {
+            editingPartners.splice(idx, 1);
+            renderPartnerEditor();
+        };
+
+        row.appendChild(swatch);
+        row.appendChild(input);
+        row.appendChild(remove);
+        wrap.appendChild(row);
+    });
+}
+
+function addPartnerRow() {
+    // 다음 색은 팔레트 순환
+    const nextColor = partnerPalette[editingPartners.length % partnerPalette.length];
+    editingPartners.push({ name: "", color: nextColor });
+    renderPartnerEditor();
+    // 새로 추가된 입력에 포커스
+    const wrap = document.getElementById("partnerEditor");
+    const inputs = wrap.querySelectorAll('input[type="text"]');
+    if (inputs.length) inputs[inputs.length - 1].focus();
+}
+
+function openColorPopover(anchor, partnerIdx) {
+    closeColorPopover();
+    const pop = document.createElement("div");
+    pop.className = "color-popover";
+    pop.id = "activeColorPopover";
+
+    partnerPalette.forEach(col => {
+        const sw = document.createElement("button");
+        sw.type = "button";
+        sw.className = "swatch-pick";
+        sw.style.background = col;
+        sw.onclick = (e) => {
+            e.stopPropagation();
+            editingPartners[partnerIdx].color = col;
+            renderPartnerEditor();
+            closeColorPopover();
+        };
+        pop.appendChild(sw);
+    });
+
+    document.body.appendChild(pop);
+    const rect = anchor.getBoundingClientRect();
+    pop.style.top = (rect.bottom + window.scrollY + 6) + "px";
+    pop.style.left = (rect.left + window.scrollX) + "px";
+
+    setTimeout(() => {
+        document.addEventListener("click", outsideColorClick);
+    }, 0);
+}
+
+function outsideColorClick(e) {
+    const pop = document.getElementById("activeColorPopover");
+    if (pop && !pop.contains(e.target)) closeColorPopover();
+}
+
+function closeColorPopover() {
+    const pop = document.getElementById("activeColorPopover");
+    if (pop) pop.remove();
+    document.removeEventListener("click", outsideColorClick);
+}
+
+/* ───────────── 모달 열기/닫기 ───────────── */
+
+function openAddModal(teamName) {
+    editingChar = null;
+    selectedImageData = "";
+    editingPartners = [];
+    document.getElementById("modalTitle").textContent = "캐릭터 추가";
+    fillTeamSelect();
+    document.getElementById("charImage").value = "";
+    document.getElementById("imagePreview").innerHTML = "NO IMAGE";
+    document.getElementById("charCode").value = "";
+    document.getElementById("charName").value = "";
+    const targetTeam = normalizeTeam(teamName || (teamOrder[0] && teamOrder[0].name) || "");
+    document.getElementById("charTeam").value = targetTeam || (teamOrder[0] ? teamOrder[0].name : "");
+    document.getElementById("charAttr").value = "물";
+    document.getElementById("charRank").value = "S";
+    renderPartnerEditor();
+    document.getElementById("charModal").classList.add("show");
+    setTimeout(() => document.getElementById("charCode").focus(), 50);
+}
+
+function openEditModal(c) {
+    editingChar = c;
+    selectedImageData = c.img || "";
+    // 파트너 깊은 복사 (취소 시 원본 보호)
+    editingPartners = (Array.isArray(c.partners) ? c.partners : []).map(p => ({
+        name: p.name || "",
+        color: p.color || DEFAULT_PARTNER_COLOR
+    }));
+    document.getElementById("modalTitle").textContent = "캐릭터 편집";
+    fillTeamSelect();
+    document.getElementById("charImage").value = "";
+    updateImagePreview(selectedImageData);
+    document.getElementById("charCode").value = c.code || "";
+    document.getElementById("charName").value = c.n || "";
+    document.getElementById("charTeam").value = normalizeTeam(c.g || (teamOrder[0] && teamOrder[0].name) || "");
+    document.getElementById("charAttr").value = c.a || "물";
+    document.getElementById("charRank").value = c.rank || "S";
+    renderPartnerEditor();
+    document.getElementById("charModal").classList.add("show");
+}
+
+function closeModal() {
+    document.getElementById("charModal").classList.remove("show");
+    closeColorPopover();
+    editingChar = null;
+    selectedImageData = "";
+    editingPartners = [];
+}
+
+async function saveCharFromModal() {
+    const code = document.getElementById("charCode").value.trim();
+    const name = document.getElementById("charName").value.trim();
+    const team = normalizeTeam(document.getElementById("charTeam").value);
+    const attr = document.getElementById("charAttr").value;
+    const rank = document.getElementById("charRank").value;
+
+    const partners = editingPartners
+        .map(p => ({ name: (p.name || "").trim(), color: p.color || DEFAULT_PARTNER_COLOR }))
+        .filter(p => p.name);
+
+    if (!code && !name && !selectedImageData) {
+        alert("이미지, 코드네임, 이름 중 하나는 입력해주세요.");
+        return;
+    }
+
+    if (editingChar) {
+        editingChar.code = code;
+        editingChar.n = name;
+        editingChar.g = team;
+        editingChar.a = attr;
+        editingChar.rank = rank;
+        editingChar.partners = partners;
+        editingChar.partner = "";
+        editingChar.img = selectedImageData;
+    } else {
+        // 새 캐릭터는 해당 팀의 마지막 순서로
+        const maxOrder = chars
+            .filter(c => normalizeTeam(c.g) === team && typeof c.order === "number")
+            .reduce((m, c) => Math.max(m, c.order), -1);
+        chars.push({ code, n: name, g: team, a: attr, rank, partners, img: selectedImageData, order: maxOrder + 1 });
+    }
+
+    normalizeData();
+    const payload = { chars, teamOrder, useDefaultOrder, attrColorMode };
+
+    // IDB에 직접 저장 시도. 실패 시 이미지 자동 다이어트 후 재시도.
+    let saved = false;
+    try {
+        await idbSet(DB_KEY, payload);
+        saved = true;
+    } catch (e) {
+        console.warn("IDB 저장 실패, 이미지 다이어트 시도:", e);
+        for (let level = 1; level <= 3 && !saved; level++) {
+            const changed = await dietAllImages(level);
+            console.log(`다이어트 레벨 ${level}: ${changed}개 이미지 줄임`);
+            try {
+                await idbSet(DB_KEY, { chars, teamOrder, useDefaultOrder, attrColorMode });
+                saved = true;
+                if (level >= 2) {
+                    alert(`저장 공간이 부족해 이미지를 자동으로 줄여서 저장했습니다. (레벨 ${level})`);
+                }
+                break;
+            } catch (e2) {
+                console.warn(`다이어트 레벨 ${level} 후에도 실패:`, e2);
+            }
+        }
+    }
+
+    if (!saved) {
+        alert("저장에 실패했습니다. [백업] 버튼으로 데이터를 내보낸 뒤 일부 이미지를 삭제해주세요.\n변경 사항은 화면에는 반영되지만, 새로고침하면 사라질 수 있습니다.");
+    }
+
+    closeModal();
+    render();
+}
+
+function openTeamModal() {
+    document.getElementById("newTeamName").value = "";
+    document.getElementById("teamModal").classList.add("show");
+    setTimeout(() => document.getElementById("newTeamName").focus(), 50);
+}
+
+function closeTeamModal() {
+    document.getElementById("teamModal").classList.remove("show");
+}
+
+function saveNewTeam() {
+    const name = normalizeTeam(document.getElementById("newTeamName").value.trim());
+    if (!name || name === UNCATEGORIZED) {
+        alert("팀 이름을 입력해주세요.");
+        return;
+    }
+    if (teamOrder.some(t => t.name === name)) {
+        alert("같은 이름의 팀이 이미 있어요.");
+        return;
+    }
+    const ok = saveOrRollback(() => {
+        teamOrder.push({ name });
+    });
+    if (!ok) return;
+    closeTeamModal();
+    render();
+}
+
+function resetArchive() {
+    if (!confirm("등록된 캐릭터를 전부 삭제할까요?")) return;
+    saveOrRollback(() => { chars = []; });
+    render();
+}
+
+function updateImagePreview(src) {
+    const preview = document.getElementById("imagePreview");
+    preview.innerHTML = src ? `<img src="${src}" alt="preview" />` : "NO IMAGE";
+}
+
+document.getElementById("charImage").addEventListener("change", function(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    compressImage(file, 640, 0.78).then(dataUrl => {
+        selectedImageData = dataUrl;
+        updateImagePreview(selectedImageData);
+    }).catch(() => {
+        alert("이미지를 불러오지 못했습니다. 다른 이미지로 다시 시도해주세요.");
+    });
+});
+
+function compressImage(file, maxSize = 720, quality = 0.82) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const img = new Image();
+            img.onload = function() {
+                const ratio = Math.min(maxSize / img.width, maxSize / img.height, 1);
+                const canvas = document.createElement("canvas");
+                canvas.width = Math.round(img.width * ratio);
+                canvas.height = Math.round(img.height * ratio);
+                const ctx = canvas.getContext("2d");
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                resolve(canvas.toDataURL("image/jpeg", quality));
+            };
+            img.onerror = reject;
+            img.src = event.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+document.addEventListener("click", (e) => {
+    if (e.target.id === "charModal") closeModal();
+    if (e.target.id === "teamModal") closeTeamModal();
+});
+
+document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+        closeModal();
+        closeTeamModal();
+    }
+});
+
+function saveImage(format) {
+    format = format || "png";
+    const isJpeg = format === "jpeg" || format === "jpg";
+
+    const target = document.querySelector("#capture-area");
+    const originalShadow = target.style.boxShadow;
+    const wasEditMode = target.classList.contains("edit-mode");
+    const editBtn = document.getElementById("editModeBtn");
+    const editBtnWasActive = editBtn.classList.contains("active");
+
+    target.style.boxShadow = "none";
+    if (wasEditMode) {
+        target.classList.remove("edit-mode");
+        editBtn.classList.remove("active");
+    }
+    target.classList.add("capturing");
+
+    const restore = () => {
+        target.style.boxShadow = originalShadow;
+        target.classList.remove("capturing");
+        if (wasEditMode) target.classList.add("edit-mode");
+        if (editBtnWasActive) editBtn.classList.add("active");
+    };
+
+    const download = (dataUrl) => {
+        const link = document.createElement("a");
+        const ts = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+        const ext = isJpeg ? "jpg" : "png";
+        link.download = `character-profile-archive_${ts}.${ext}`;
+        link.href = dataUrl;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+    };
+
+    const w = target.offsetWidth;
+    const h = target.offsetHeight;
+
+    // PNG: 무손실이라 해상도를 낮게(2) — 용량 절약
+    // JPEG: 압축되니 해상도는 높게(3) + quality 0.92로 충분히 좋은 품질
+    const pixelRatio = isJpeg ? 3 : 2;
+    const jpegQuality = 0.92;
+
+    const tryHtmlToImage = () => {
+        if (typeof htmlToImage === "undefined") {
+            return Promise.reject(new Error("html-to-image not loaded"));
+        }
+        const fn = isJpeg ? htmlToImage.toJpeg : htmlToImage.toPng;
+        if (!fn) return Promise.reject(new Error("toPng/toJpeg unavailable"));
+        return fn.call(htmlToImage, target, {
+            backgroundColor: "#fffefa",
+            pixelRatio: pixelRatio,
+            cacheBust: true,
+            quality: isJpeg ? jpegQuality : 1,
+            width: w,
+            height: h
+        });
+    };
+
+    const tryDomToImage = () => {
+        if (typeof domtoimage === "undefined") {
+            return Promise.reject(new Error("dom-to-image-more not loaded"));
+        }
+        const fn = isJpeg ? domtoimage.toJpeg : domtoimage.toPng;
+        if (!fn) return Promise.reject(new Error("toPng/toJpeg unavailable"));
+        return fn.call(domtoimage, target, {
+            bgcolor: "#fffefa",
+            scale: pixelRatio,
+            width: w * pixelRatio,
+            height: h * pixelRatio,
+            quality: isJpeg ? jpegQuality : 1,
+            style: {
+                transform: "scale(" + pixelRatio + ")",
+                transformOrigin: "top left",
+                width: w + "px",
+                height: h + "px"
+            }
+        });
+    };
+
+    tryHtmlToImage()
+        .then(dataUrl => { restore(); download(dataUrl); })
+        .catch(err1 => {
+            console.warn("html-to-image 실패, dom-to-image-more 시도:", err1);
+            tryDomToImage()
+                .then(dataUrl => { restore(); download(dataUrl); })
+                .catch(err2 => {
+                    restore();
+                    console.error("두 라이브러리 모두 실패:", err1, err2);
+                    alert("이미지 저장 중 오류가 발생했습니다.");
+                });
+        });
+}
+
+function escapeHTML(str) {
+    return String(str)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+function escapeAttr(str) {
+    return String(str).replaceAll('"', "&quot;");
+}
+
+(async () => {
+    await load();
+
+    const orderBtn = document.getElementById("orderToggleBtn");
+    orderBtn.classList.toggle("active", useDefaultOrder);
+    orderBtn.textContent = useDefaultOrder ? "기본순서 ON" : "기본순서 OFF";
+
+    const attrBtn = document.getElementById("attrModeBtn");
+    attrBtn.classList.toggle("active", attrColorMode);
+    attrBtn.textContent = attrColorMode ? "속성색 ON" : "속성색 OFF";
+    document.getElementById("capture-area").classList.toggle("attr-mode-color", attrColorMode);
+
+    render();
+})();
+</script>
+</body>
+</html>
