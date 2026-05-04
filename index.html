@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=1080, user-scalable=yes" />
 <title>Character Profile Archive</title>
 <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.13/dist/html-to-image.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dom-to-image-more@3.5.0/dist/dom-to-image-more.min.js"></script>
@@ -38,7 +38,6 @@ body {
 
 .page {
     width: 1080px;
-    max-width: calc(100% - 24px);
     margin: 0 auto;
     padding: 18px 0 28px;
 }
@@ -663,22 +662,6 @@ button.primary {
     box-shadow: 0 0 0 2px var(--ink);
 }
 
-@media (max-width: 900px) {
-    .page { padding: 12px 0 20px; }
-    .header, .toolbar {
-        display: flex;
-        flex-direction: column;
-        align-items: stretch;
-    }
-    .counts { width: 100%; flex-wrap: wrap; }
-    .count { flex: 1; min-width: calc(50% - 4px); }
-    .grid, .compact .grid { grid-template-columns: repeat(3, 1fr); }
-    h1 { font-size: 22px; }
-}
-
-@media (max-width: 480px) {
-    .grid, .compact .grid { grid-template-columns: 1fr; }
-}
 </style>
 </head>
 <body>
@@ -687,7 +670,7 @@ button.primary {
         <div class="header">
             <div>
                 <h1>CHARACTER PROFILE ARCHIVE</h1>
-                <p class="desc">  </p>
+                <p class="desc"> </p>
             </div>
             <div class="counts">
                 <div class="count"><span>전체</span><b id="totalCount">0</b></div>
@@ -1853,9 +1836,6 @@ function saveImage(format) {
 
     const w = target.offsetWidth;
     const h = target.offsetHeight;
-
-    // PNG: 무손실이라 해상도를 낮게(2) — 용량 절약
-    // JPEG: 압축되니 해상도는 높게(3) + quality 0.92로 충분히 좋은 품질
     const pixelRatio = isJpeg ? 3 : 2;
     const jpegQuality = 0.92;
 
